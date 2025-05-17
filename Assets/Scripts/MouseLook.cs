@@ -5,7 +5,6 @@ public class MouseLook : MonoBehaviour
 {
     private float sensitivity = 1f;
     private float smoothing = 1f;
-
     private float xMousePos;
     private float smoothedMousePos;
     private float currentLookingPos;
