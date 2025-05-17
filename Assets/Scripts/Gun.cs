@@ -13,6 +13,7 @@ public class Gun : MonoBehaviour
     public float gunShotRadius = 20f;
     public LayerMask raycastLayerMask;
     public LayerMask enemyLayerMask;
+    public GameObject weaponIconUI;
 
     [Header("References")]
     public EnemyManager enemyManager;
@@ -31,8 +32,10 @@ public class Gun : MonoBehaviour
         if (enemyManager == null)
             enemyManager = FindObjectOfType<EnemyManager>();
 
-        // Começa desativado até o jogador pegar a arma
+        // desativa até o jogador pegar a arma
         enabled = false;
+        if (weaponIconUI != null)
+            weaponIconUI.SetActive(false);
     }
 
     private void Update()
@@ -49,24 +52,26 @@ public class Gun : MonoBehaviour
     public void Equip()
     {
         hasWeapon = true;
-        enabled = true; // ativa o script
+        enabled = true;
+        if (weaponIconUI != null)
+            weaponIconUI.SetActive(true);
     }
 
     private void Fire()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, gunShotRadius, enemyLayerMask);
-        foreach (var col in hits)
-        {
-            var awareness = col.GetComponent<EnemyAwareness>();
-            if (awareness)
-                awareness.TriggerAggro();
-        }
+        // Remove possíveis nulos antes de tudo
+        enemyManager.enemiesInTrigger.RemoveAll(e => e == null);
 
-        foreach (var enemy in enemyManager.enemiesInTrigger)
+        // Faz um snapshot (array) para não iterar na lista original:
+        Enemy[] snapshot = enemyManager.enemiesInTrigger.ToArray();
+
+        foreach (var enemy in snapshot)
         {
-            if (enemy == null) continue;
+            if (enemy == null)
+                continue;
+
             Vector3 dir = (enemy.transform.position - transform.position).normalized;
-            if (Physics.Raycast(transform.position, dir, out var hit, range * 1.5f, raycastLayerMask))
+            if (Physics.Raycast(transform.position, dir, out RaycastHit hit, range * 1.5f, raycastLayerMask))
             {
                 if (hit.transform == enemy.transform)
                 {
@@ -78,16 +83,17 @@ public class Gun : MonoBehaviour
         }
     }
 
+
     private void OnTriggerEnter(Collider other)
     {
-        var enemy = other.GetComponent<Enemy>();
-        if (enemy) enemyManager.AddEnemy(enemy);
+        if (other.TryGetComponent<Enemy>(out var enemy))
+            enemyManager.AddEnemy(enemy);
     }
 
     private void OnTriggerExit(Collider other)
     {
-        var enemy = other.GetComponent<Enemy>();
-        if (enemy) enemyManager.RemoveEnemy(enemy);
+        if (other.TryGetComponent<Enemy>(out var enemy))
+            enemyManager.RemoveEnemy(enemy);
     }
 
     private void OnDrawGizmosSelected()
