@@ -19,6 +19,7 @@ public class Gun : MonoBehaviour
 
     private BoxCollider gunTrigger;
     private float nextFireTime;
+    private bool hasWeapon = false;
 
     private void Awake()
     {
@@ -29,10 +30,15 @@ public class Gun : MonoBehaviour
 
         if (enemyManager == null)
             enemyManager = FindObjectOfType<EnemyManager>();
+
+        // Começa desativado até o jogador pegar a arma
+        enabled = false;
     }
 
     private void Update()
     {
+        if (!hasWeapon) return;
+
         if (Mouse.current.leftButton.wasPressedThisFrame && Time.time >= nextFireTime)
         {
             nextFireTime = Time.time + fireRate;
@@ -40,29 +46,33 @@ public class Gun : MonoBehaviour
         }
     }
 
+    public void Equip()
+    {
+        hasWeapon = true;
+        enabled = true; // ativa o script
+    }
+
     private void Fire()
     {
-        // Activate aggro on all enemies within shot radius
-        Collider[] enemies = Physics.OverlapSphere(transform.position, gunShotRadius, enemyLayerMask);
-        foreach (var col in enemies)
+        Collider[] hits = Physics.OverlapSphere(transform.position, gunShotRadius, enemyLayerMask);
+        foreach (var col in hits)
         {
             var awareness = col.GetComponent<EnemyAwareness>();
             if (awareness)
-                awareness.isAggro = true;
+                awareness.TriggerAggro();
         }
 
-        // Check line-of-sight and apply damage
         foreach (var enemy in enemyManager.enemiesInTrigger)
         {
             if (enemy == null) continue;
-            Vector3 direction = (enemy.transform.position - transform.position).normalized;
-            if (Physics.Raycast(transform.position, direction, out var hit, range * 1.5f, raycastLayerMask))
+            Vector3 dir = (enemy.transform.position - transform.position).normalized;
+            if (Physics.Raycast(transform.position, dir, out var hit, range * 1.5f, raycastLayerMask))
             {
                 if (hit.transform == enemy.transform)
                 {
-                    float distance = Vector3.Distance(transform.position, enemy.transform.position);
-                    float damage = (distance <= range * 0.5f) ? bigDamage : smallDamage;
-                    enemy.TakeDamage(damage);
+                    float dist = Vector3.Distance(transform.position, enemy.transform.position);
+                    float dmg = (dist <= range * 0.5f) ? bigDamage : smallDamage;
+                    enemy.TakeDamage(dmg);
                 }
             }
         }
@@ -71,20 +81,17 @@ public class Gun : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         var enemy = other.GetComponent<Enemy>();
-        if (enemy)
-            enemyManager.AddEnemy(enemy);
+        if (enemy) enemyManager.AddEnemy(enemy);
     }
 
     private void OnTriggerExit(Collider other)
     {
         var enemy = other.GetComponent<Enemy>();
-        if (enemy)
-            enemyManager.RemoveEnemy(enemy);
+        if (enemy) enemyManager.RemoveEnemy(enemy);
     }
 
     private void OnDrawGizmosSelected()
     {
-        // Visualize shot radius in editor
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, gunShotRadius);
     }
