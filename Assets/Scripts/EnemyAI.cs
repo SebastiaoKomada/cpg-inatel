@@ -13,12 +13,14 @@ public class EnemyAI : MonoBehaviour
     private Transform playerTransform;
     private Vector3 wanderCenter;
     private float nextWanderTime;
+    private Animator anim;
 
     private void Awake()
     {
         awareness = GetComponent<EnemyAwareness>();
         agent = GetComponent<NavMeshAgent>();
-        playerTransform = FindObjectOfType<PlayerMove>()?.transform;
+        anim = GetComponent<Animator>();
+        playerTransform = FindFirstObjectByType<PlayerMove>()?.transform;
         wanderCenter = transform.position;
         nextWanderTime = Time.time + wanderInterval;
     }
@@ -31,6 +33,7 @@ public class EnemyAI : MonoBehaviour
         {
             agent.isStopped = false;
             agent.SetDestination(playerTransform.position);
+            anim.SetBool("run", true);
         }
         else if (!agent.hasPath || agent.remainingDistance < 1f || Time.time >= nextWanderTime)
         {

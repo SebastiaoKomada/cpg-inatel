@@ -19,7 +19,7 @@ public class EnemyAwareness : MonoBehaviour
     {
         meshRenderer = GetComponent<MeshRenderer>();
         originalMaterial = meshRenderer.material;
-        playerTransform = FindObjectOfType<PlayerMove>()?.transform;
+        playerTransform = FindFirstObjectByType<PlayerMove>()?.transform;
     }
 
     private void Update()

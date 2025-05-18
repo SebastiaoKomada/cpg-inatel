@@ -6,7 +6,7 @@ public class SpriteRotator : MonoBehaviour
 
     void Start()
     {
-        target = FindObjectOfType<PlayerMove>().transform;
+        target = FindFirstObjectByType<PlayerMove>().transform;
     }
 
     void Update()
