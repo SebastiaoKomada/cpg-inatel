@@ -30,7 +30,7 @@ public class Gun : MonoBehaviour
         gunTrigger.center = new Vector3(0f, 0f, range * 0.5f);
 
         if (enemyManager == null)
-            enemyManager = FindObjectOfType<EnemyManager>();
+            enemyManager = FindFirstObjectByType<EnemyManager>();
 
         // desativa até o jogador pegar a arma
         enabled = false;

@@ -20,7 +20,7 @@ public class Enemy : MonoBehaviour
     private void Awake()
     {
         currentHealth = maxHealth;
-        enemyManager = enemyManager ? enemyManager : FindObjectOfType<EnemyManager>();
+        enemyManager = enemyManager ? enemyManager : FindFirstObjectByType<EnemyManager>();
 
         agent   = GetComponent<NavMeshAgent>();
         rb      = GetComponent<Rigidbody>();
